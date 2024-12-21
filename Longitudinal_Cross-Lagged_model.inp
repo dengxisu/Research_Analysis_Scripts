@@ -1,0 +1,104 @@
+! Title: Cross-Lagged Model of Risk Factors, School Support, and Educational Aspiration
+! This Mplus syntax performs measurement model evaluation, overall cross-lagged model analysis, 
+! and multi-group cross-lagged modeling based on gender, hukou, and academic performance.
+
+DATA:
+  FILE = mergedata.dat;
+
+VARIABLE:
+  NAMES = t1_physical_risk t1_psychological_risk t1_family_poverty_risk t1_family_illness_risk
+          t2_physical_risk t2_psychological_risk t2_family_poverty_risk t2_family_illness_risk
+          t1_teacher t1_peer t1_class t1_school
+          t2_teacher t2_peer t2_class t2_school
+          t1_educational_aspiration t2_educational_aspiration
+          gender hukou academic_performance ethnic_nationality only_child educational_migration parental_education;
+  USEVARIABLES = t1_physical_risk t1_psychological_risk t1_family_poverty_risk t1_family_illness_risk
+                 t2_physical_risk t2_psychological_risk t2_family_poverty_risk t2_family_illness_risk
+                 t1_teacher t1_peer t1_class t1_school
+                 t2_teacher t2_peer t2_class t2_school
+                 t1_educational_aspiration t2_educational_aspiration
+                 gender hukou academic_performance ethnic_nationality only_child educational_migration parental_education;
+  
+  ! For subgroup analysis, replace grouping variable with gender, hukou or academic_performance.
+  ! Example: GROUPING = gender (0=female 1=male);
+  MISSING IS ALL (-999); 
+  
+ANALYSIS:
+  !Supports FIML by default.
+  ! Use MLR for robust standard errors and model fit indices.
+  TYPE = GENERAL;
+  ESTIMATOR = MLR; 
+  BOOTSTRAP = 1000;
+  
+! PART 1: Measurement Model Evaluation
+MODEL:
+  ! T1 Risk Factors (Formative Measurement)
+  t1_risk_factors BY t1_physical_risk@1 t1_psychological_risk@1 
+                   t1_family_poverty_risk@1 t1_family_illness_risk@1;
+  t1_physical_risk (e1);
+  t1_psychological_risk (e2);
+  t1_family_poverty_risk (e3);
+  t1_family_illness_risk (e4);
+
+  ! T2 Risk Factors (Formative Measurement)
+  t2_risk_factors BY t2_physical_risk@1 t2_psychological_risk@1 
+                   t2_family_poverty_risk@1 t2_family_illness_risk@1;
+  t2_physical_risk (e5);
+  t2_psychological_risk (e6);
+  t2_family_poverty_risk (e7);
+  t2_family_illness_risk (e8);
+
+  ! T1 School Support (Formative Measurement)
+  t1_school_support BY t1_teacher@1 t1_peer@1 t1_class@1 t1_school@1;
+  t1_teacher (e9);
+  t1_peer (e10);
+  t1_class (e11);
+  t1_school (e12);
+
+  ! T2 School Support (Formative Measurement)
+  t2_school_support BY t2_teacher@1 t2_peer@1 t2_class@1 t2_school@1;
+  t2_teacher (e13);
+  t2_peer (e14);
+  t2_class (e15);
+  t2_school (e16);
+  
+  ! Estimate means & T-test
+  [T1_risk_factors];  ! Estimate the mean of T1 latent variable
+  [T2_risk_factors];  ! Estimate the mean of T2 latent variable
+MODEL CONSTRAINT:
+  NEW(mean_diff);
+  mean_diff = [T2_risk_factors] - [T1_risk_factors];
+
+OUTPUT:
+  STANDARDIZED;
+  MODINDICES;
+  RESIDUAL;
+
+! PART 2: Overall Cross-Lagged Model
+MODEL:
+  ! Auto-regressive paths
+  t2_risk_factors ON t1_risk_factors (p1) gender hukou academic_performance ethnic_nationality only_child educational_migration parental_education;
+  t2_school_support ON t1_school_support (p2) gender hukou academic_performance ethnic_nationality only_child educational_migration parental_education;
+  t2_educational_aspiration ON t1_educational_aspiration (p3) gender hukou academic_performance ethnic_nationality only_child educational_migration parental_education;
+
+  ! Cross-lagged paths  
+  t2_educational_aspiration ON t1_risk_factors (p4);
+  t2_school_support ON t1_risk_factors (p5);
+  t2_educational_aspiration ON t1_school_support (p6);
+  t2_risk_factors ON t1_school_support (p7);
+  t2_risk_factors ON t1_educational_aspiration (p8);
+  t2_school_support ON t1_educational_aspiration (p9);
+  
+  ! Covariances at T1
+  t1_risk_factors WITH t1_school_support (cov1);
+  t1_educational_aspiration WITH t1_school_support (cov2);
+  t1_educational_aspiration WITH t1_risk_factors (cov3);  
+  
+  ! Residual Correlations at T2
+  t2_risk_factors WITH t2_school_support (resid1);
+  t2_educational_aspiration WITH t2_school_support (resid2);
+  t2_educational_aspiration WITH t2_risk_factors (resid3);  
+
+OUTPUT:
+  STANDARDIZED;
+  FITINDICES;
