@@ -15,8 +15,11 @@ summarize ids
 
 ***Data Cleaning***
 *Educational aspiration
-recode c22 (10=.), gen(educational_aspiration)	// Recode dependent variable 'Educational aspiration'
-tabulate educational_aspiration, nol
+recode c22 (10=.)(1=6)(2 3 =9)(4 5=12)(6=15)(7=16)(8=19)(9=22), gen(t1_educational_aspiration)	// Recode dependent variable 'T1 Educational aspiration'
+
+recode w2b18 (10=.)(1=6)(2 3 =9)(4 5=12)(6=15)(7=16)(8=19)(9=22), gen(t2_educational_aspiration)	// Recode dependent variable 'T2 Educational aspiration'
+summarize t1_educational_aspiration t2_educational_aspiration
+
 
 *Risk factors coding
 recode a10 (1=1) (2/3=0), gen(t1_physical_risk)	// Recode 'T1 serious illness'
@@ -35,6 +38,9 @@ gen t2_family_poverty_risk = w2a09	// Recode 'T2 family poverty'
 recode be22 (1=1) (2=0), gen(t1_family_illness_risk)	// Recode 'T1 serious illness of a family member'
 recode w2be26 (1=1) (2=0), gen(t2_family_illness_risk)	// Recode 'T2 serious illness of a family member'
 
+gen vulnerable_child = (t1_physical_risk == 1) | (t1_psychological_risk == 5) | (t1_family_poverty_risk == 1) | (t1_family_illness_risk == 1)	// Recode 'vulnerable_child'
+ta vulnerable_child
+
 *School support factors coding
 gen t1_teacher = c1704	// Recode 'T1 My teacher and I have a good relationship'
 gen t2_teacher = w2b0603	// Recode 'T2 My teacher and I have a good relationship'
@@ -49,7 +55,7 @@ gen t1_school = c1710 	// Recode 'T1 The school atmosphere is good'
 gen t2_school = w2b0608	// Recode 'T2 The school atmosphere is good'
 
 *Grouping and control variables
-gen hukou = sthktype	// Recode 'current Hukou'(1=rural Hukou)
+gen hukou = sthktype	// Recode 'current Hukou'(1=rural Hukou) 
 gen gender = stsex	// Recode 'Gender'(1=male)
 gen total_score = tr_chn + tr_mat + tr_eng  // Recode 'performance' (1=good performance)
 egen score_standard = std(total_score)
@@ -63,8 +69,7 @@ gen parents_education = max(b06, b07)	//Recode 'Parents' highest educational lev
 
 summarize t1_physical_risk t2_physical_risk t1_psychological_risk t2_psychological_risk t1_family_poverty_risk ///
 	t2_family_poverty_risk t1_family_illness_risk t2_family_illness_risk t1_teacher t2_teacher ///
-	t1_peer t2_peer t1_class t2_class t1_school t2_school ///
+	t1_peer t2_peer t1_class t2_class t1_school t2_school t1_educational_aspiration t2_educational_aspiration ///
 	hukou gender academic_performance ethnicity only_child educational_migration parents_education
 	 
 save mergedata.dta, replace
-
