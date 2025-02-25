@@ -38,8 +38,10 @@ gen t2_family_poverty_risk = w2a09	// Recode 'T2 family poverty'
 recode be22 (1=1) (2=0), gen(t1_family_illness_risk)	// Recode 'T1 serious illness of a family member'
 recode w2be26 (1=1) (2=0), gen(t2_family_illness_risk)	// Recode 'T2 serious illness of a family member'
 
-gen vulnerable_child = (t1_physical_risk == 1) | (t1_psychological_risk == 5) | (t1_family_poverty_risk == 1) | (t1_family_illness_risk == 1)	// Recode 'vulnerable_child'
+
+gen vulnerable_child = cond(( (t1_physical_risk == 1) + (t1_psychological_risk > 3) + (t1_family_poverty_risk < 3) + (t1_family_illness_risk == 1) ) >= 2, 1, 0)
 ta vulnerable_child
+bysort vulnerable_child: summarize t1_educational_aspiration t2_educational_aspiration
 
 *School support factors coding
 gen t1_teacher = c1704	// Recode 'T1 My teacher and I have a good relationship'
@@ -64,7 +66,8 @@ recode score_standard (1/max = 1) (min/-1 = 0) (else= .), gen(academic_performan
 recode a03 (1 = 0) (else = 1) , gen(ethnicity) 	//Recode 'ethnic nationality'(1=Ethnic Minority, 0=Han ethnicity )
 recode a01 (1 = 1) (2 = 0) , gen(only_child) 	//Recode 'Only child'(1=only child )
 recode a08 (1 = 0) (2 = 1) , gen(educational_migration) 	//Recode 'Educational Migration'(1=Not live in the local county/district )
-gen parents_education = max(b06, b07)	//Recode 'Parents' highest educational level'
+gen parents_education = max(b06, b07)
+recode parents_education (1=0)(2 =6)(3 4 =9)(5 6=12)(7=15)(8=16)(9=19)	//Recode 'Parents' highest educational level'
 
 
 summarize t1_physical_risk t2_physical_risk t1_psychological_risk t2_psychological_risk t1_family_poverty_risk ///
