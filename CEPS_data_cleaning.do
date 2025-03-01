@@ -74,5 +74,12 @@ summarize t1_physical_risk t2_physical_risk t1_psychological_risk t2_psychologic
 	t2_family_poverty_risk t1_family_illness_risk t2_family_illness_risk t1_teacher t2_teacher ///
 	t1_peer t2_peer t1_class t2_class t1_school t2_school t1_educational_aspiration t2_educational_aspiration ///
 	hukou gender academic_performance ethnicity only_child educational_migration parents_education
-	 
+
+*Harman's single-factor test
+princomp t1_physical_risk t2_physical_risk t1_psychological_risk t2_psychological_risk t1_family_poverty_risk ///
+	t2_family_poverty_risk t1_family_illness_risk t2_family_illness_risk t1_teacher t2_teacher ///
+	t1_peer t2_peer t1_class t2_class t1_school t2_school t1_educational_aspiration t2_educational_aspiration, comp(1)
+local pc1_var = e(principal)[1,1] * 100
+display "Percentage of variance explained by the first principal component: " %5.2f `pc1_var'
+
 save mergedata.dta, replace
